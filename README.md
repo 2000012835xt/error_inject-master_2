@@ -29,4 +29,8 @@ The threshold for determining errors: ```./new_error_injection_gpu.py(677)```
 
 ### Results
 
-The results are saved in ```./log/error_prop.csv```. Each column represents image index, error magnitude, injected element in feature_map, injected element in feature_map_err, # different elements in conv0, ..., conv15, respectively. 
+The results are saved in ```./log/error_prop.csv```. The meaning of each column is listed below:
+
+| image index | error magnitude | injected element in feature_map | injected element in feature_map_err | # different elements in conv0 | conv1 | conv2 | conv3 | conv5 | conv6 | conv7 | conv9 | conv10 | conv11 | conv13 | conv14 | conv15 |
+| ----------- | --------------- | ------------------------------- | ----------------------------------- | ----------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ------ | ------ | ------ | ------ | ------ |
+
