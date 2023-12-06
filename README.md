@@ -22,4 +22,9 @@ The layers to be injected: ```./quant/vgg_error.py(177)```
 
 The bit to be filpped: ```./quant/vgg_error.py(19)```
 
-The Threshold for determining errors: ```./new_error_injection_gpu.py(677)```
+The threshold for determining errors: ```./new_error_injection_gpu.py(677)```
+
+
+### Results
+
+The results are saved in ```./log/error_prop.csv```. Each column represents image index, error magnitude, injected element in feature_map, injected element in feature_map_err, # different elements in conv0, ..., conv15, respectively. 
