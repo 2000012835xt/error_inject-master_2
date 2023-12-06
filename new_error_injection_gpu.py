@@ -368,7 +368,7 @@ def test(model, criterion, data_loader, device, epoch):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(data_loader):
             # pdb.set_trace()
-            if batch_idx <1:
+            if batch_idx <20:
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs, y_integers = model(inputs)
                 batch_loss = criterion(outputs, targets)
@@ -674,7 +674,7 @@ if __name__ == "__main__":
             loss, acc, feature_map = test(fake_quant_model, criterion, test_loader, device, epoch=0)
 
             # pdb.set_trace()
-            for batch_idx in range(1):
+            for batch_idx in range(20):
                 for j in range(128):
                     for i in range(13):
                         feature_map_torch=torch.tensor(feature_map[batch_idx][i][j])
@@ -685,19 +685,18 @@ if __name__ == "__main__":
                         image_idx=128*batch_idx+j
                         if i == 0:
                             error_mag=torch.abs(feature_map_torch - feature_map_err_torch).max().cpu().item()
-                            error_prop[image_idx+128*repeat_i*1,1]=error_mag
-                            print(error_mag)
+                            error_prop[image_idx+128*repeat_i*20,1]=error_mag
                             if error_mag>3.9:
                                 error_where0,error_where1,error_where2=torch.where(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9)
-                                error_prop[image_idx+128*repeat_i*1,2]=feature_map_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
-                                error_prop[image_idx+128*repeat_i*1,3]=feature_map_err_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                                error_prop[image_idx+128*repeat_i*20,2]=feature_map_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                                error_prop[image_idx+128*repeat_i*20,3]=feature_map_err_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
                             else:
-                                error_prop[image_idx+128*repeat_i*1,2]=error_mag
-                                error_prop[image_idx+128*repeat_i*1,3]=0 
+                                error_prop[image_idx+128*repeat_i*20,2]=error_mag
+                                error_prop[image_idx+128*repeat_i*20,3]=0 
                         # print(image_idx,i,diff_ge_4)
-                        error_prop[image_idx+128*repeat_i*1,0]=image_idx
-                        error_prop[image_idx+128*repeat_i*1,i+4]=diff_ge_4
-            pdb.set_trace()
+                        error_prop[image_idx+128*repeat_i*20,0]=image_idx
+                        error_prop[image_idx+128*repeat_i*20,i+4]=diff_ge_4
+            # pdb.set_trace()
             np.savetxt(log_error_propagate,error_prop,delimiter=',',fmt="%d")
             # hooks = []
             # for layer_i, layer in enumerate(layer_injection): # 执行8次, 向8层layer的乘累加注入error
