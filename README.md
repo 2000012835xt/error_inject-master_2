@@ -18,9 +18,9 @@ python new_error_injection_gpu.py
 
 ### Error Injection
 
-The number of injected errors: ```./error_rate/vgg/error_count.csv```
+The number of injected errors: ```./error_rate/vgg/error_count.csv``` (set to 1)
 
-The layers to be injected: ```./quant/vgg_error.py(177)```
+The layers to be injected: ```./quant/vgg_error.py(177)``` (set to [0])
 
 The bit to be filpped: ```./quant/vgg_error.py(19)```
 
