@@ -10,6 +10,8 @@ pip install tqdm
 
 The data root of CIFAR in ```./new_error_injection_gpu.py(500)``` needs to be modified.
 
+Run the following command:
+
 ```
 python new_error_injection_gpu.py
 ```
