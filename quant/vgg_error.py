@@ -30,7 +30,9 @@ def inject_error(result, prob, bw=32, bw_hardware=24):
 
     # indices=torch.randint(0,result.numel(),(count,))
     result_1d=result.reshape(-1)
+    print(result_1d[indices])
     result_1d[indices]=torch.bitwise_xor(result_1d[indices],err)
+    print(result_1d[indices])
     result_injected=result_1d.reshape(result.shape)
     """ err_prob = prob.repeat(list(result.shape) + [1])
     # generate error bit mask for each bit

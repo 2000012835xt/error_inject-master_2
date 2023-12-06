@@ -368,7 +368,7 @@ def test(model, criterion, data_loader, device, epoch):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(data_loader):
             # pdb.set_trace()
-            if batch_idx == 0:
+            if batch_idx <1:
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs, y_integers = model(inputs)
                 batch_loss = criterion(outputs, targets)
@@ -629,6 +629,7 @@ if __name__ == "__main__":
     log_not_equal_file='./log/vgg_not_equal.csv'
     log_diff_greater_than_001='./log/vgg_diff_greater_than_001.csv'
     log_fmap_MSE='./log/vgg_feature_map_MSE.csv'
+    log_error_propagate='./log/error_prop.csv'
 
     error_rate_all_layer = []
     for error_rate_file_i in error_rate_file:
@@ -656,7 +657,8 @@ if __name__ == "__main__":
         not_equal_one = []
         diff_gt_001_one = []
         fmap_mse_one = []
-        for repeat_i in range(1):
+        error_prop=np.zeros([12800,17])
+        for repeat_i in range(5):
             # ptq_model_cpy = copy.deepcopy(ptq_model)
             # fake_quant_model_cpy = copy.deepcopy(fake_quant_model)
 
@@ -670,12 +672,33 @@ if __name__ == "__main__":
 
             loss_err, acc_err, feature_map_err = test(fake_quant_model_error, criterion, test_loader, device, epoch=0)
             loss, acc, feature_map = test(fake_quant_model, criterion, test_loader, device, epoch=0)
-            for j in range(128):
-                for i in range(13):
-                    feature_map_torch=torch.tensor(feature_map[0][i][j])
-                    feature_map_err_torch=torch.tensor(feature_map_err[0][i][j])
-                    print(j,i,(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9).sum().cpu())
 
+            # pdb.set_trace()
+            for batch_idx in range(1):
+                for j in range(128):
+                    for i in range(13):
+                        feature_map_torch=torch.tensor(feature_map[batch_idx][i][j])
+                        feature_map_err_torch=torch.tensor(feature_map_err[batch_idx][i][j])
+                        diff_ge_4=(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9).sum().cpu().item()
+                        # if i==0 and diff_ge_4==1:
+                        #     pdb.set_trace()
+                        image_idx=128*batch_idx+j
+                        if i == 0:
+                            error_mag=torch.abs(feature_map_torch - feature_map_err_torch).max().cpu().item()
+                            error_prop[image_idx+128*repeat_i*1,1]=error_mag
+                            print(error_mag)
+                            if error_mag>3.9:
+                                error_where0,error_where1,error_where2=torch.where(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9)
+                                error_prop[image_idx+128*repeat_i*1,2]=feature_map_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                                error_prop[image_idx+128*repeat_i*1,3]=feature_map_err_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                            else:
+                                error_prop[image_idx+128*repeat_i*1,2]=error_mag
+                                error_prop[image_idx+128*repeat_i*1,3]=0 
+                        # print(image_idx,i,diff_ge_4)
+                        error_prop[image_idx+128*repeat_i*1,0]=image_idx
+                        error_prop[image_idx+128*repeat_i*1,i+4]=diff_ge_4
+            pdb.set_trace()
+            np.savetxt(log_error_propagate,error_prop,delimiter=',',fmt="%d")
             # hooks = []
             # for layer_i, layer in enumerate(layer_injection): # 执行8次, 向8层layer的乘累加注入error
             #     # module_inject_error(ptq_model_cpy, [layer], prob=error_prob_injection[layer_i], bw=32,
