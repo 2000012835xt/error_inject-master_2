@@ -107,7 +107,7 @@ class quant_VGG16(nn.Module):
 
         self.input_scale = nn.Parameter(torch.tensor(input_scale))
         self.input_zero_point = nn.Parameter(torch.tensor(input_zero_point).float())
-        self.input_quant = Quantizer(bit=8, scale=self.input_scale, zero_point=self.input_zero_point, all_positive=False)
+        self.input_quant = Quantizer(bit=8, scale=self.input_scale, zero_point=self.input_zero_point, all_positive=True)
         self.features = nn.ModuleList()
 
         i = 0

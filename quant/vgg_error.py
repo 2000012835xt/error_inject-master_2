@@ -191,7 +191,7 @@ class quant_VGG16_error(nn.Module):
         super().__init__()
         # _log_api_usage_once(self)
 
-        self.input_quant = Quantizer(bit=8, scale=input_scale, zero_point=input_zero_point, all_positive=False)
+        self.input_quant = Quantizer(bit=8, scale=input_scale, zero_point=input_zero_point, all_positive=True)
         self.features = nn.ModuleList()
 
         i = 0

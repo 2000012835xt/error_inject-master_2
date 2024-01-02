@@ -354,6 +354,7 @@ def train(model, optimizer, criterion, data_loader, device, epoch):
     return loss, float(correct / total)
 
 
+saved_batches=5
 def test(model, criterion, data_loader, device, epoch):
     """
     Evaluate the loss and accuracy of the model
@@ -368,7 +369,7 @@ def test(model, criterion, data_loader, device, epoch):
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(data_loader):
             # pdb.set_trace()
-            if batch_idx <20:
+            if batch_idx < saved_batches:
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs, y_integers = model(inputs)
                 batch_loss = criterion(outputs, targets)
@@ -495,12 +496,17 @@ if __name__ == "__main__":
     # save_file = './models/mobilenetv1_s8.pt'
     # save_file = './models/mobilenetv1_0p5_s8.pt'
 
+    # params
+    num_class = 10
+    train_batch_size = 128
+    test_batch_size = 128
+
     # create criterion, training and test data loader
     time_start = time.time()
     task = Cifar10Task(data_root='/home/xt/dataset')
     criterion = task.get_criterion().to(device)
     train_loader = task.get_train_dataloader(batch_size=128)
-    test_loader = task.get_test_dataloader(batch_size=128)
+    test_loader = task.get_test_dataloader(batch_size=test_batch_size)
     num_class = 10
 
     # load pre-trained model
@@ -657,8 +663,9 @@ if __name__ == "__main__":
         not_equal_one = []
         diff_gt_001_one = []
         fmap_mse_one = []
-        error_prop=np.zeros([12800,17])
-        for repeat_i in range(5):
+        repeat=5
+        error_prop=np.zeros([saved_batches*test_batch_size*repeat,17])
+        for repeat_i in range(repeat):
             # ptq_model_cpy = copy.deepcopy(ptq_model)
             # fake_quant_model_cpy = copy.deepcopy(fake_quant_model)
 
@@ -674,28 +681,34 @@ if __name__ == "__main__":
             loss, acc, feature_map = test(fake_quant_model, criterion, test_loader, device, epoch=0)
 
             # pdb.set_trace()
-            for batch_idx in range(20):
-                for j in range(128):
+            threshold=2.9
+            for batch_idx in range(saved_batches):
+                for j in range(test_batch_size):
                     for i in range(13):
                         feature_map_torch=torch.tensor(feature_map[batch_idx][i][j])
                         feature_map_err_torch=torch.tensor(feature_map_err[batch_idx][i][j])
-                        diff_ge_4=(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9).sum().cpu().item()
+                        diff_ge_4=(torch.abs(feature_map_torch - feature_map_err_torch) > threshold).sum().cpu().item()
                         # if i==0 and diff_ge_4==1:
                         #     pdb.set_trace()
+                        # max_error=torch.abs(feature_map_torch - feature_map_err_torch).max().cpu().item()
+                        # if max_error>threshold:
+                        #     print(j,i,max_error)
+                        # pdb.set_trace()
                         image_idx=128*batch_idx+j
                         if i == 0:
                             error_mag=torch.abs(feature_map_torch - feature_map_err_torch).max().cpu().item()
-                            error_prop[image_idx+128*repeat_i*20,1]=error_mag
-                            if error_mag>3.9:
-                                error_where0,error_where1,error_where2=torch.where(torch.abs(feature_map_torch - feature_map_err_torch) > 3.9)
-                                error_prop[image_idx+128*repeat_i*20,2]=feature_map_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
-                                error_prop[image_idx+128*repeat_i*20,3]=feature_map_err_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                            error_prop[image_idx+test_batch_size*repeat_i*saved_batches,1]=error_mag
+                            # import pdb; pdb.set_trace()
+                            if error_mag>threshold:
+                                error_where0,error_where1,error_where2=torch.where(torch.abs(feature_map_torch - feature_map_err_torch) > threshold)
+                                error_prop[image_idx+test_batch_size*repeat_i*saved_batches,2]=feature_map_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
+                                error_prop[image_idx+test_batch_size*repeat_i*saved_batches,3]=feature_map_err_torch[error_where0.cpu().item()][error_where1.cpu().item()][error_where2.cpu().item()].cpu().item()
                             else:
-                                error_prop[image_idx+128*repeat_i*20,2]=error_mag
-                                error_prop[image_idx+128*repeat_i*20,3]=0 
+                                error_prop[image_idx+test_batch_size*repeat_i*saved_batches,2]=error_mag
+                                error_prop[image_idx+test_batch_size*repeat_i*saved_batches,3]=0 
                         # print(image_idx,i,diff_ge_4)
-                        error_prop[image_idx+128*repeat_i*20,0]=image_idx
-                        error_prop[image_idx+128*repeat_i*20,i+4]=diff_ge_4
+                        error_prop[image_idx+test_batch_size*repeat_i*saved_batches,0]=image_idx
+                        error_prop[image_idx+test_batch_size*repeat_i*saved_batches,i+4]=diff_ge_4
             # pdb.set_trace()
             np.savetxt(log_error_propagate,error_prop,delimiter=',',fmt="%d")
             # hooks = []

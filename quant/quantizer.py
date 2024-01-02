@@ -41,7 +41,8 @@ class Quantizer(t.nn.Module):
         # s_scale = grad_scale(self.s, s_grad_scale)
 
         x = x / self.scale
-        x = t.clamp(x, self.thd_neg, self.thd_pos)
         xq = t.round(x) + self.zero_point
-        x = (xq - self.zero_point) * self.scale 
-        return x
+        xq = t.clamp(xq, self.thd_neg, self.thd_pos)
+
+        x_hat = (xq - self.zero_point) * self.scale 
+        return x_hat

@@ -394,7 +394,7 @@ class ResNet34_quant(nn.Module):
         # self.bn1 = norm_layer(self.inplanes)
         # self.relu = nn.ReLU(inplace=True)
 
-        self.input_quant = Quantizer(bit=8, scale=conv_input_scale[0], zero_point=conv_input_zero_point[0], all_positive=False)
+        self.input_quant = Quantizer(bit=8, scale=conv_input_scale[0], zero_point=conv_input_zero_point[0], all_positive=True)
 
         self.conv1 = quant_ConvReLU2d(3, self.inplanes, conv_weights[0], conv_bias[0], conv_input_scale[0], 
                                       conv_w_scale[0], conv_out_scale[0], conv_out_zero_point[0],
